@@ -1,50 +1,29 @@
-const adminAuth = (req , res , next)=>{
-    console.log("Authorized checked")
-    const token = "xyzabc"
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const authUser = async (req , res , next)=>{
+    try{
+        const {token} = req.cookies;
 
-    const isAdminAuth = token === "xyzabc";
+        if(!token){
+            throw new error("Token is not Valid");
+        }
+        const decodeObj = await jwt.verify(token , "DEV@Sync1234");
 
-    if(!isAdminAuth){
-        console.log("Admin not Authorized");
-        return res.status(403).send("Not Authorized");
-    }
+        const {_id} = decodeObj;
 
-    else{
+        const user = await User.findById(_id);
+        if(!user){
+            throw new Error("User not found");
+        }
+        req.user = user;
         next();
     }
-}
-const userAuth = (req , res , next)=>{
-    console.log("Authorized checked")
-    const token = "xyzabc"
-
-    const isUserAuth = token === "xyzabc";
-
-    if(!isUserAuth){
-        console.log("Admin not Authorized");
-        return res.status(403).send("Not Authorized");
-    }
-
-    else{
-        next();
+    catch(err){
+        res.status(400).send("ERROR : " + err.message);
     }
 }
-const guestAuth = (req , res , next)=>{
-    console.log("Guests Authorized Check");
-    const token = "xyzabc";
 
-    const isGuestAuth = token === "xyzabc";
-    if(!isGuestAuth){
-        console.log("Guests Not Authorized");
-        return res.status(403).send("Not authorized");
-    }
-
-    else{
-        next();
-    }
-}
 
 module.exports = {
-    adminAuth,
-    userAuth,
-    guestAuth,
+    authUser,
 }
